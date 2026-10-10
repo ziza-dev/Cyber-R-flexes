@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analyseur de liens | Cyber Réflexes</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav>
+    <a href="index.html">Accueil</a>
+    <a href="phishing.html">Phishing</a>
+    <a href="mots-de-passe.html">Mots de passe</a>
+    <a href="analyseur.html">Analyseur de liens</a>
+    <a href="quiz.html">Quiz</a>
+    <a href="confiance.html">Confiance</a>
+  </nav>
+
+  <header class="hero">
+    <h1>Analyseur de liens</h1>
+    <p>Colle un lien suspect : on examine son adresse et on t'explique chaque signal, sans jamais l'ouvrir.</p>
+  </header>
+
+  <main>
+    <section>
+      <p class="astuce">L'analyse se fait entièrement dans ton navigateur. Le lien n'est ni envoyé, ni visité, ni enregistré. Évite de coller un lien contenant des informations personnelles (jeton, identifiant).</p>
+
+      <div class="ligne-saisie">
+        <input type="text" id="lien" placeholder="Exemple : http://paypa1-securite.top/login" autocomplete="off">
+        <button class="bouton" id="analyser">Analyser</button>
+      </div>
+
+      <div class="exemples">
+        <span>Essayer un exemple :</span>
+        <button class="petit-bouton" data-ex="http://paypa1-securite.top/login/verifier-compte">Faux site de paiement</button>
+        <button class="petit-bouton" data-ex="https://www.wikipedia.org/">Site normal</button>
+        <button class="petit-bouton" data-ex="http://192.168.4.20:8080/connexion">Adresse IP</button>
+        <button class="petit-bouton" data-ex="https://banque.com@tinyurl.com/x7Kd2">Arobase et raccourci</button>
+      </div>
+
+      <div id="resultat" class="resultat"></div>
+    </section>
+
+    <section>
+      <h2>Ce que l'analyseur examine</h2>
+      <div class="grille">
+        <div class="carte"><h3>Le domaine</h3><p>Le vrai propriétaire d'une adresse est la fin du nom, juste avant le premier <code>/</code>. Tout ce qui précède n'est qu'un sous-domaine, que n'importe qui peut choisir.</p></div>
+        <div class="carte"><h3>Les caractères trompeurs</h3><p>Des lettres d'autres alphabets ressemblent à des lettres latines. Le chiffre 1 peut remplacer un l. L'arobase <code>@</code> peut cacher la vraie destination.</p></div>
+        <div class="carte"><h3>Les redirections</h3><p>Les raccourcisseurs et les liens contenant un autre lien cachent la destination finale. On les signale, sans les suivre.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Aller plus loin : vérifier la réputation</h2>
+      <p>Ces services spécialisés comparent un lien à des bases de sites malveillants connus. Attention : en y collant un lien, tu le transmets à ces services.</p>
+      <p>
+        <a id="lien-google" class="bouton" href="https://transparencyreport.google.com/safe-browsing/search" target="_blank" rel="noopener noreferrer">Google Safe Browsing</a>
+        <a class="bouton" href="https://www.virustotal.com/gui/home/url" target="_blank" rel="noopener noreferrer">VirusTotal</a>
+      </p>
+    </section>
+
+    <section>
+      <p class="alerte"><strong>Limite importante :</strong> un résultat « aucun signal » ne prouve pas qu'un lien est sûr. Un site tout neuf, sans défaut visible, peut être malveillant. En cas de doute, n'ouvre pas le lien : tape toi-même l'adresse du site officiel.</p>
+    </section>
+  </main>
+
+  <footer>
+    <p>Projet réalisé par ziza-dev, à but pédagogique.</p>
+  </footer>
+
+  <script>
+    var MARQUES = ["paypal", "amazon", "netflix", "apple", "microsoft", "google", "facebook", "instagram", "whatsapp", "orange", "wave", "ameli", "impots", "laposte", "colissimo", "chronopost", "dhl", "ecobank"];
+    var TLD_RISQUE = ["zip", "mov", "xyz", "top", "click", "icu", "buzz", "tk", "ml", "ga", "cf", "gq", "support", "country"];
+    var RACCOURCISSEURS = ["bit.ly", "tinyurl.com", "t.co", "goo.gl", "is.gd", "cutt.ly", "ow.ly", "rebrand.ly", "shorturl.at"];
+    var MOTS_PIEGES = ["login", "signin", "connexion", "verify", "verification", "verifier", "secure", "securite", "update", "account", "compte", "confirm", "password", "motdepasse", "paiement", "payment", "banking"];
+    var SECOND_NIVEAU = ["co", "com", "org", "net", "gov", "edu", "ac"];
+
+    var champ = document.getElementById("lien");
+    var sortie = document.getElementById("resultat");
+    var lienGoogle = document.getElementById("lien-google");
+
+    function domainePrincipal(labels) {
+      var n = labels.length;
+      if (n >= 3 && labels[n - 1].length === 2 && SECOND_NIVEAU.indexOf(labels[n - 2]) !== -1) {
+        return labels.slice(-3);
+      }
+      return labels.slice(-2);
+    }
+
+    function analyser(brut) {
+      var constats = [];
+      var score = 0;
+
+      function ajouter(niveau, titre, texte) {
+        constats.push({ niveau: niveau, titre: titre, texte: texte });
+        if (niveau === "danger") score += 35;
+        if (niveau === "attention") score += 15;
+      }
+
+      var saisie = brut.trim();
+      if (saisie === "") return null;
+      var avecSchema = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(saisie) ? saisie : "https://" + saisie;
+
+      var url;
+      try {
+        url = new URL(avecSchema);
+      } catch (e) {
+        return { erreur: "Ce texte n'est pas une adresse valide. Vérifie qu'il ressemble à https://exemple.com/page" };
+      }
+
+      if (url.protocol !== "http:" && url.protocol !== "https:") {
+        ajouter("danger", "Type de lien inhabituel", "Ce lien commence par « " + url.protocol + " » au lieu de http ou https. Il ne mène pas vers un site web classique : n'y touche pas.");
+        return { constats: constats, score: Math.min(score, 100), url: url, labels: [], principal: "" };
+      }
+
+      var hote = url.hostname.toLowerCase();
+      var labels = hote.split(".");
+      var estIP = /^\d{1,3}(\.\d{1,3}){3}$/.test(hote) || hote.indexOf(":") !== -1;
+      var principalLabels = estIP ? [] : domainePrincipal(labels);
+      var principal = principalLabels.join(".");
+      var sousDomaines = estIP ? [] : labels.slice(0, labels.length - principalLabels.length);
+      var nomPrincipal = principalLabels.length ? principalLabels[0] : "";
+      var tld = labels[labels.length - 1];
+
+      if (url.protocol === "http:") {
+        ajouter("attention", "Connexion non chiffrée", "Le lien utilise http et non https : les données échangées pourraient être lues en route. À l'inverse, https seul ne prouve rien, car les sites malveillants l'utilisent aussi.");
+      } else {
+        ajouter("ok", "Connexion chiffrée (https)", "C'est la base, mais ce n'est pas un certificat de confiance : les faux sites l'utilisent aussi.");
+      }
+
+      if (url.username !== "" || url.password !== "") {
+        ajouter("danger", "Arobase dans l'adresse", "Tout ce qui précède le @ est ignoré par le navigateur. Ici, la vraie destination est « " + url.hostname + " ». C'est une ruse classique pour faire croire à un site connu.");
+      }
+
+      if (estIP) {
+        ajouter("danger", "Adresse numérique au lieu d'un nom", "Un service sérieux utilise un nom de domaine, pas une suite de chiffres. Les sites de phishing utilisent souvent des adresses IP.");
+      }
+
+      if (/[^\x00-\x7F]/.test(saisie.split("/")[2] || saisie) || hote.indexOf("xn--") !== -1) {
+        ajouter("danger", "Caractères trompeurs", "Le nom contient des caractères non latins ou encodés (« xn-- »). Certaines lettres d'autres alphabets ressemblent à des lettres latines : « раypal » peut paraître identique à « paypal ».");
+      }
+
+      if (!estIP) {
+        if (sousDomaines.length >= 3) {
+          ajouter("attention", "Beaucoup de sous-domaines", "Il y en a " + sousDomaines.length + " (« " + sousDomaines.join(".") + " »). Les arnaqueurs en empilent pour y glisser un nom connu. Le propriétaire réel est « " + principal + " ».");
+        }
+
+        MARQUES.forEach(function (marque) {
+          var sousTexte = sousDomaines.join(".");
+          var normalise = nomPrincipal.replace(/0/g, "o").replace(/1/g, "l").replace(/3/g, "e").replace(/5/g, "s");
+          if (sousTexte.indexOf(marque) !== -1 && nomPrincipal !== marque) {
+            ajouter("danger", "Nom de marque dans un sous-domaine", "« " + marque + " » apparaît avant le domaine réel « " + principal + " ». N'importe qui peut créer ce sous-domaine : le site n'appartient pas forcément à cette marque.");
+          } else if (nomPrincipal !== marque && normalise.indexOf(marque) !== -1 && nomPrincipal.indexOf(marque) === -1) {
+            ajouter("danger", "Imitation d'un nom de marque", "« " + nomPrincipal + " » ressemble à « " + marque + " » avec des chiffres à la place de lettres.");
+          } else if (nomPrincipal !== marque && nomPrincipal.indexOf(marque) !== -1) {
+            ajouter("attention", "Nom de marque dans un domaine différent", "« " + marque + " » apparaît dans « " + nomPrincipal + " », mais le domaine n'est pas celui de la marque. Vérifie l'adresse officielle avant de continuer.");
+          }
+        });
+
+        if (TLD_RISQUE.indexOf(tld) !== -1) {
+          ajouter("attention", "Extension souvent détournée", "L'extension « ." + tld + " » est bon marché et très utilisée dans les arnaques. Elle existe aussi pour des sites légitimes : c'est un indice, pas une preuve.");
+        }
+
+        if ((hote.match(/-/g) || []).length >= 3) {
+          ajouter("attention", "Beaucoup de tirets", "Les noms à rallonge comme « securite-compte-verification » sont typiques des faux sites.");
+        }
+
+        if (RACCOURCISSEURS.indexOf(principal) !== -1) {
+          ajouter("attention", "Lien raccourci", "Ce service cache la destination finale. Pour la voir sans l'ouvrir, utilise un outil de dépliage d'URL ou demande l'adresse complète à l'expéditeur.");
+        }
+      }
+
+      if (url.port !== "" && url.port !== "80" && url.port !== "443") {
+        ajouter("attention", "Port inhabituel", "Le lien utilise le port " + url.port + ". Les sites publics normaux n'en ont presque jamais besoin.");
+      }
+
+      var reste = (url.pathname + url.search).toLowerCase();
+      var trouves = MOTS_PIEGES.filter(function (m) { return reste.indexOf(m) !== -1 || hote.indexOf(m) !== -1; });
+      if (trouves.length > 0) {
+        ajouter("attention", "Mots qui poussent à agir", "On trouve : " + trouves.slice(0, 4).join(", ") + ". Ces mots servent souvent à faire croire à une page de connexion officielle.");
+      }
+
+      if (/https?(%3a|:)/i.test(url.pathname + url.search) || /(url|redirect|redir|next|goto|target)=/i.test(url.search)) {
+        ajouter("attention", "Redirection possible", "Le lien contient un paramètre qui peut renvoyer vers une autre adresse. La destination finale n'est peut-être pas celle qu'on voit.");
+      }
+
+      if (url.href.length > 100) {
+        ajouter("attention", "Adresse très longue", "Les liens très longs servent souvent à cacher le vrai domaine au milieu de caractères.");
+      }
+
+      return { constats: constats, score: Math.min(score, 100), url: url, labels: sousDomaines, principal: principal };
+    }
+
+    function ligne(classe, titre, texte) {
+      var div = document.createElement("div");
+      div.className = "constat " + classe;
+      var t = document.createElement("strong");
+      t.textContent = titre;
+      var p = document.createElement("span");
+      p.textContent = texte;
+      div.appendChild(t);
+      div.appendChild(p);
+      return div;
+    }
+
+    function afficher() {
+      sortie.innerHTML = "";
+      var res = analyser(champ.value);
+      if (res === null) return;
+
+      if (res.erreur) {
+        var e = document.createElement("p");
+        e.className = "alerte";
+        e.textContent = res.erreur;
+        sortie.appendChild(e);
+        return;
+      }
+
+      var classe, titre;
+      if (res.score >= 50) {
+        classe = "danger";
+        titre = "Très suspect : n'ouvre pas ce lien.";
+      } else if (res.score >= 15) {
+        classe = "attention";
+        titre = "À vérifier avec prudence.";
+      } else {
+        classe = "ok";
+        titre = "Aucun signal d'alerte évident, mais cela ne prouve pas que le lien est sûr.";
+      }
+
+      var v = document.createElement("div");
+      v.className = "verdict " + classe;
+      v.textContent = titre + " (indice de risque : " + res.score + "/100)";
+      sortie.appendChild(v);
+
+      if (res.principal) {
+        var d = document.createElement("p");
+        d.textContent = "Domaine principal estimé : " + res.principal + (res.labels.length ? " | Sous-domaines : " + res.labels.join(".") : "");
+        sortie.appendChild(d);
+      }
+
+      res.constats.forEach(function (c) {
+        sortie.appendChild(ligne(c.niveau, c.titre, c.texte));
+      });
+
+      lienGoogle.href = "https://transparencyreport.google.com/safe-browsing/search?url=" + encodeURIComponent(res.url.href);
+    }
+
+    document.getElementById("analyser").addEventListener("click", afficher);
+    champ.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") afficher();
+    });
+
+    document.querySelectorAll(".petit-bouton").forEach(function (b) {
+      b.addEventListener("click", function () {
+        champ.value = b.getAttribute("data-ex");
+        afficher();
+      });
+    });
+  </script>
+</body>
+</html>

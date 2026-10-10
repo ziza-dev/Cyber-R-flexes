@@ -3,31 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quiz cybersécurité | Cyber Réflexes</title>
+  <title>Quiz : vrai ou faux message ? | Cyber Réflexes</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <nav>
-  <a href="index.html">Accueil</a>
-  <a href="phishing.html">Phishing</a>
-  <a href="mots-de-passe.html">Mots de passe</a>
-  <a href="analyseur.html">Analyseur de liens</a>
-  <a href="quiz.html">Quiz</a>
-  <a href="confiance.html">Confiance</a>
-</nav>
+    <a href="index.html">Accueil</a>
+    <a href="phishing.html">Phishing</a>
+    <a href="mots-de-passe.html">Mots de passe</a>
+    <a href="analyseur.html">Analyseur de liens</a>
+    <a href="quiz.html">Quiz</a>
+    <a href="confiance.html">Confiance</a>
+  </nav>
 
   <header class="hero">
-    <h1>Quiz cybersécurité</h1>
-    <p>5 questions pour tester tes réflexes.</p>
+    <h1>Quiz : vrai ou faux message ?</h1>
+    <p>Pour chaque message, décide s'il est légitime ou s'il s'agit d'une tentative d'arnaque.</p>
   </header>
 
   <main>
     <section>
-      <p id="compteur"></p>
-      <h2 id="question"></h2>
-      <div id="reponses"></div>
-      <p id="explication"></p>
-      <button class="bouton" id="suivant" style="display:none">Question suivante</button>
+      <p class="astuce">Tous ces messages sont inventés, à but pédagogique. Les noms de services et les adresses sont fictifs.</p>
+      <div id="zone"></div>
+      <div id="historique"></div>
     </section>
   </main>
 
@@ -36,119 +34,282 @@
   </footer>
 
   <script>
-    const questions = [
+    var LIBELLES = {
+      urgence: "Les messages qui pressent",
+      expediteur: "Les expéditeurs suspects",
+      lien: "Les liens trompeurs",
+      demande: "Les demandes d'informations sensibles",
+      offre: "Les offres trop belles",
+      piece: "Les pièces jointes dangereuses",
+      proche: "Les faux proches",
+      legitime: "Les vrais messages pris pour des arnaques"
+    };
+
+    var MESSAGES = [
       {
-        texte: "Tu reçois un SMS : « Votre colis est bloqué, payez 2 € ici ». Que fais-tu ?",
-        choix: ["Je clique vite pour régler", "J'ignore le lien et je vérifie sur le site officiel du transporteur", "Je réponds au SMS"],
-        bonne: 1,
-        explication: "Un faux SMS de colis est une arnaque classique. Passe toujours par le site officiel."
+        titre: "SMS de livraison",
+        entete: "SMS de : +221 ** *** ** 41",
+        corps: "ColisRapide : votre colis n'a pas pu être livré.\nRéglez 1,99 € de frais sous 24 h pour éviter le retour :\nhttp://colis-rapide-suivi.top/payer",
+        phishing: true,
+        indices: ["Urgence artificielle (24 h)", "Domaine en « .top », sans rapport avec un vrai transporteur", "Demande de paiement par lien"],
+        categories: ["urgence", "lien"]
       },
       {
-        texte: "Quel mot de passe est le plus solide ?",
-        choix: ["azerty123", "Aziz2005", "cheval-bleu-lampe-nuage"],
-        bonne: 2,
-        explication: "Une phrase de passe longue est plus solide qu'un mot court avec quelques chiffres."
+        titre: "Relevé de compte",
+        entete: "E-mail de : releves@mabanque.example | Objet : Votre relevé de mars est disponible",
+        corps: "Bonjour,\nVotre relevé mensuel est disponible dans votre espace client. Pour le consulter, connectez-vous depuis l'application ou le site que vous utilisez habituellement.\nAucune action n'est requise dans ce message.",
+        phishing: false,
+        indices: ["Aucun lien cliquable", "Aucune urgence ni demande sensible", "Il te renvoie vers ton canal habituel plutôt que vers un lien"],
+        categories: ["legitime"]
       },
       {
-        texte: "Que fait la double authentification (2FA) ?",
-        choix: ["Elle remplace le mot de passe", "Elle ajoute une deuxième preuve d'identité", "Elle efface tes données"],
-        bonne: 1,
-        explication: "Même si ton mot de passe est volé, il manque la deuxième preuve."
+        titre: "Compte suspendu",
+        entete: "E-mail de : securite@mabanque-verification.xyz | Objet : URGENT : compte suspendu",
+        corps: "Cher client,\nNous avons détecté une activité suspecte. Votre compte sera suspendu dans 12 heures.\nConfirmez votre identité et votre mot de passe ici :\nhttps://mabanque-verification.xyz/connexion",
+        phishing: true,
+        indices: ["Menace de suspension et délai court", "Adresse d'expédition qui n'est pas celle de la banque (« .xyz »)", "Demande de mot de passe : une banque ne le demande jamais"],
+        categories: ["urgence", "expediteur", "demande"]
       },
       {
-        texte: "Un site te demande ton code reçu par SMS pour « vérifier ton compte ». Tu le donnes ?",
-        choix: ["Oui, c'est pour ma sécurité", "Jamais : ce code est personnel", "Seulement si le site a l'air sérieux"],
-        bonne: 1,
-        explication: "Un code reçu par SMS ne se partage jamais, même avec quelqu'un qui prétend être du support."
+        titre: "Code de vérification",
+        entete: "SMS de : MonService",
+        corps: "Votre code de vérification est 483920. Ne le communiquez à personne : MonService ne vous le demandera jamais.",
+        phishing: false,
+        indices: ["Aucun lien", "Ne demande rien en retour", "À condition que tu viennes de te connecter : si tu n'as rien demandé, quelqu'un essaie d'accéder à ton compte, change alors ton mot de passe"],
+        categories: ["legitime"]
       },
       {
-        texte: "Pourquoi faire les mises à jour de ton téléphone ?",
-        choix: ["Pour corriger des failles de sécurité", "Uniquement pour changer l'apparence", "Ça ne sert à rien"],
-        bonne: 0,
-        explication: "Les mises à jour corrigent des failles que des pirates peuvent exploiter."
+        titre: "Gain inattendu",
+        entete: "E-mail de : gagnant@concours-chance.top | Objet : Félicitations, vous avez gagné !",
+        corps: "Vous avez été tiré au sort et gagné un smartphone dernier cri !\nIl suffit de régler 3 000 FCFA de frais de livraison avant ce soir via le lien :\nhttp://concours-chance.top/recuperer",
+        phishing: true,
+        indices: ["Tirage au sort auquel tu n'as pas participé", "Frais à payer pour recevoir un cadeau", "Délai « avant ce soir »"],
+        categories: ["offre", "urgence", "lien"]
+      },
+      {
+        titre: "Message d'un ami",
+        entete: "WhatsApp, numéro inconnu",
+        corps: "Salut, c'est moi, j'ai changé de numéro. Mon ancien téléphone est cassé.\nTu peux m'envoyer 20 000 FCFA tout de suite ? Je te rembourse demain, c'est urgent !",
+        phishing: true,
+        indices: ["Prétendu proche sur un numéro inconnu", "Demande d'argent urgente", "Raison qui t'empêche de vérifier"],
+        categories: ["proche", "urgence", "demande"]
+      },
+      {
+        titre: "Nouvelle connexion",
+        entete: "E-mail de : alertes@monservice.example | Objet : Nouvelle connexion sur votre compte",
+        corps: "Une connexion depuis un nouvel appareil a eu lieu sur votre compte.\nSi c'était vous, vous pouvez ignorer ce message. Sinon, ouvrez l'application et changez votre mot de passe.",
+        phishing: false,
+        indices: ["Pas de lien : il te renvoie vers l'application", "Aucune menace, aucun délai", "Pour être sûr, vérifie directement dans l'application, jamais via un message"],
+        categories: ["legitime"]
+      },
+      {
+        titre: "Facture impayée",
+        entete: "E-mail de : comptabilite@entreprise-docs.top | Pièce jointe : Facture_impayee.pdf.exe",
+        corps: "Bonjour,\nVeuillez trouver ci-joint la facture impayée. Sans règlement immédiat, des pénalités seront appliquées.\nOuvrez le fichier joint pour les détails.",
+        phishing: true,
+        indices: ["Fichier en « .pdf.exe » : c'est un programme déguisé en document", "Menace de pénalités", "Expéditeur et entreprise que tu ne connais pas"],
+        categories: ["piece", "urgence", "expediteur"]
       }
     ];
 
-    let index = 0;
-    let score = 0;
-    let repondu = false;
+    var CLE = "cyber-quiz-historique";
+    var zone = document.getElementById("zone");
+    var histoEl = document.getElementById("historique");
 
-    const compteur = document.getElementById("compteur");
-    const questionEl = document.getElementById("question");
-    const reponsesEl = document.getElementById("reponses");
-    const explicationEl = document.getElementById("explication");
-    const suivantBtn = document.getElementById("suivant");
+    var file, index, score, erreurs;
 
-    function afficher() {
-      const q = questions[index];
-      repondu = false;
-      compteur.textContent = "Question " + (index + 1) + " sur " + questions.length;
-      questionEl.textContent = q.texte;
-      explicationEl.textContent = "";
-      suivantBtn.style.display = "none";
-      reponsesEl.innerHTML = "";
+    function melanger(liste) {
+      var t = liste.slice();
+      for (var i = t.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var x = t[i]; t[i] = t[j]; t[j] = x;
+      }
+      return t;
+    }
 
-      q.choix.forEach(function (texte, i) {
-        const bouton = document.createElement("button");
-        bouton.className = "choix";
-        bouton.textContent = texte;
-        bouton.addEventListener("click", function () {
-          repondre(i, bouton);
+    function lireHistorique() {
+      try {
+        var brut = localStorage.getItem(CLE);
+        return brut ? JSON.parse(brut) : [];
+      } catch (e) { return []; }
+    }
+
+    function sauverHistorique(entree) {
+      try {
+        var h = lireHistorique();
+        h.push(entree);
+        localStorage.setItem(CLE, JSON.stringify(h.slice(-10)));
+      } catch (e) { }
+    }
+
+    function afficherHistorique() {
+      histoEl.innerHTML = "";
+      var h = lireHistorique();
+      if (h.length === 0) return;
+      var titre = document.createElement("h2");
+      titre.textContent = "Tes progrès";
+      histoEl.appendChild(titre);
+
+      var meilleur = Math.max.apply(null, h.map(function (x) { return x.score; }));
+      var p = document.createElement("p");
+      p.textContent = "Meilleur score : " + meilleur + " / " + h[0].total + ". Dernières tentatives : " + h.slice(-5).map(function (x) { return x.score + "/" + x.total; }).join(", ") + ".";
+      histoEl.appendChild(p);
+
+      var note = document.createElement("p");
+      note.className = "astuce";
+      note.textContent = "Ces scores sont gardés uniquement dans ce navigateur, sur cet appareil. Aucun serveur ne les reçoit.";
+      histoEl.appendChild(note);
+    }
+
+    function demarrer() {
+      file = melanger(MESSAGES);
+      index = 0;
+      score = 0;
+      erreurs = [];
+      question();
+    }
+
+    function question() {
+      var m = file[index];
+      zone.innerHTML = "";
+
+      var c = document.createElement("p");
+      c.textContent = "Message " + (index + 1) + " sur " + file.length + " | " + m.titre;
+      zone.appendChild(c);
+
+      var boite = document.createElement("div");
+      boite.className = "message";
+      var e = document.createElement("div");
+      e.className = "entete";
+      e.textContent = m.entete;
+      var corps = document.createElement("div");
+      corps.className = "corps";
+      corps.textContent = m.corps;
+      boite.appendChild(e);
+      boite.appendChild(corps);
+      zone.appendChild(boite);
+
+      var boutons = document.createElement("div");
+      boutons.className = "deux-boutons";
+      var bPhish = document.createElement("button");
+      bPhish.className = "bouton";
+      bPhish.textContent = "C'est du phishing";
+      var bOk = document.createElement("button");
+      bOk.className = "bouton";
+      bOk.textContent = "Message légitime";
+      bOk.style.backgroundColor = "var(--vert)";
+      boutons.appendChild(bPhish);
+      boutons.appendChild(bOk);
+      zone.appendChild(boutons);
+
+      var retour = document.createElement("div");
+      retour.className = "retour";
+      zone.appendChild(retour);
+
+      var fini = false;
+      function repondre(choixPhishing) {
+        if (fini) return;
+        fini = true;
+        bPhish.disabled = true;
+        bOk.disabled = true;
+
+        var juste = choixPhishing === m.phishing;
+        if (juste) {
+          score++;
+        } else {
+          erreurs.push(m);
+        }
+
+        retour.className = "retour " + (juste ? "bon" : "faux");
+        retour.innerHTML = "";
+        var t = document.createElement("strong");
+        t.textContent = (juste ? "Bonne réponse. " : "Raté. ") + (m.phishing ? "C'était du phishing." : "Ce message était légitime.");
+        retour.appendChild(t);
+
+        var liste = document.createElement("ul");
+        m.indices.forEach(function (i) {
+          var li = document.createElement("li");
+          li.textContent = i;
+          liste.appendChild(li);
         });
-        reponsesEl.appendChild(bouton);
-      });
-    }
+        retour.appendChild(liste);
 
-    function repondre(i, bouton) {
-      if (repondu) return;
-      repondu = true;
-      const q = questions[index];
-      const boutons = reponsesEl.querySelectorAll(".choix");
-
-      if (i === q.bonne) {
-        score++;
-        bouton.classList.add("bon");
-      } else {
-        bouton.classList.add("faux");
-        boutons[q.bonne].classList.add("bon");
+        var suite = document.createElement("button");
+        suite.className = "bouton";
+        suite.textContent = index === file.length - 1 ? "Voir mon bilan" : "Message suivant";
+        suite.addEventListener("click", function () {
+          index++;
+          if (index < file.length) { question(); } else { bilan(); }
+        });
+        retour.appendChild(suite);
       }
 
-      explicationEl.textContent = q.explication;
-      suivantBtn.style.display = "inline-block";
-      suivantBtn.textContent = index === questions.length - 1 ? "Voir mon score" : "Question suivante";
+      bPhish.addEventListener("click", function () { repondre(true); });
+      bOk.addEventListener("click", function () { repondre(false); });
     }
 
-    suivantBtn.addEventListener("click", function () {
-      index++;
-      if (index < questions.length) {
-        afficher();
+    function bilan() {
+      zone.innerHTML = "";
+      sauverHistorique({ score: score, total: file.length });
+
+      var h2 = document.createElement("h2");
+      h2.textContent = "Ton score : " + score + " / " + file.length;
+      zone.appendChild(h2);
+
+      if (erreurs.length === 0) {
+        var p = document.createElement("p");
+        p.className = "astuce";
+        p.textContent = "Sans faute ! Rejoue : l'ordre change à chaque fois.";
+        zone.appendChild(p);
       } else {
-        terminer();
+        var compte = {};
+        erreurs.forEach(function (m) {
+          m.categories.forEach(function (c) { compte[c] = (compte[c] || 0) + 1; });
+        });
+        var faibles = Object.keys(compte).sort(function (a, b) { return compte[b] - compte[a]; }).slice(0, 3);
+
+        var t = document.createElement("h3");
+        t.textContent = "À travailler en priorité";
+        zone.appendChild(t);
+        var ul = document.createElement("ul");
+        faibles.forEach(function (c) {
+          var li = document.createElement("li");
+          li.textContent = LIBELLES[c];
+          ul.appendChild(li);
+        });
+        zone.appendChild(ul);
+
+        var t2 = document.createElement("h3");
+        t2.textContent = "Les messages que tu as ratés";
+        zone.appendChild(t2);
+        erreurs.forEach(function (m) {
+          zone.appendChild(ligneErreur(m));
+        });
       }
-    });
 
-    function terminer() {
-      compteur.textContent = "Quiz terminé";
-      questionEl.textContent = "Ton score : " + score + " / " + questions.length;
-      reponsesEl.innerHTML = "";
-      suivantBtn.style.display = "none";
+      var again = document.createElement("button");
+      again.className = "bouton";
+      again.textContent = "Recommencer";
+      again.addEventListener("click", function () { demarrer(); afficherHistorique(); });
+      zone.appendChild(again);
 
-      if (score === questions.length) {
-        explicationEl.textContent = "Parfait ! Tu as d'excellents réflexes.";
-      } else if (score >= 3) {
-        explicationEl.textContent = "Bien joué ! Relis les pages pour combler les derniers points.";
-      } else {
-        explicationEl.textContent = "Pas de panique : relis les pages Phishing et Mots de passe, puis réessaie.";
-      }
-
-      const rejouer = document.createElement("a");
-      rejouer.className = "bouton";
-      rejouer.href = "quiz.html";
-      rejouer.textContent = "Recommencer";
-      reponsesEl.appendChild(rejouer);
+      afficherHistorique();
     }
 
-    afficher();
+    function ligneErreur(m) {
+      var d = document.createElement("div");
+      d.className = "constat danger";
+      var s = document.createElement("strong");
+      s.textContent = m.titre + " : " + (m.phishing ? "c'était du phishing" : "c'était un message légitime");
+      d.appendChild(s);
+      var p = document.createElement("span");
+      p.textContent = m.indices.join(" | ");
+      d.appendChild(p);
+      return d;
+    }
+
+    afficherHistorique();
+    demarrer();
   </script>
 </body>
 </html>
