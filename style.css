@@ -157,3 +157,62 @@ input[type="text"] {
   font-size: 1em;
   background-color: var(--carte);
   color: var(--texte);
+  .resultat { margin-top: 20px; }
+
+.verdict {
+  padding: 16px 20px;
+  border-radius: 10px;
+  font-weight: bold;
+  margin-bottom: 16px;
+}
+
+.verdict.ok { background: rgba(52, 211, 153, 0.12); border: 1px solid var(--vert); }
+.verdict.attention { background: rgba(251, 191, 36, 0.12); border: 1px solid #fbbf24; }
+.verdict.danger { background: rgba(248, 113, 113, 0.12); border: 1px solid var(--alerte); }
+
+.constat {
+  background-color: var(--carte);
+  border: 1px solid var(--bordure);
+  border-left: 4px solid var(--bordure);
+  border-radius: 8px;
+  padding: 10px 16px;
+  margin-bottom: 10px;
+}
+
+.constat.ok { border-left-color: var(--vert); }
+.constat.attention { border-left-color: #fbbf24; }
+.constat.danger { border-left-color: var(--alerte); }
+.constat strong { display: block; }
+
+.ligne-saisie { display: flex; flex-wrap: wrap; gap: 10px; }
+.ligne-saisie input { flex: 1; min-width: 220px; }
+
+.exemples { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+
+.petit-bouton {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 20px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.message {
+  background-color: var(--carte);
+  border: 1px solid var(--bordure);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 16px 0;
+}
+
+.message .entete { color: var(--texte-doux); font-size: 0.9em; margin-bottom: 8px; }
+.message .corps { white-space: pre-line; }
+
+.deux-boutons { display: flex; flex-wrap: wrap; gap: 12px; }
+.deux-boutons button { flex: 1; min-width: 160px; }
+
+.retour { margin-top: 16px; }
+.retour.bon { color: var(--vert); }
+.retour.faux { color: var(--alerte); }
