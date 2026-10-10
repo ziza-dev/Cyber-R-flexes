@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz cybersécurité | Cyber Réflexes</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav>
+    <a href="index.html">Accueil</a>
+    <a href="phishing.html">Phishing</a>
+    <a href="mots-de-passe.html">Mots de passe</a>
+    <a href="quiz.html">Quiz</a>
+  </nav>
+
+  <header class="hero">
+    <h1>Quiz cybersécurité</h1>
+    <p>5 questions pour tester tes réflexes.</p>
+  </header>
+
+  <main>
+    <section>
+      <p id="compteur"></p>
+      <h2 id="question"></h2>
+      <div id="reponses"></div>
+      <p id="explication"></p>
+      <button class="bouton" id="suivant" style="display:none">Question suivante</button>
+    </section>
+  </main>
+
+  <footer>
+    <p>Projet réalisé par ziza-dev, à but pédagogique.</p>
+  </footer>
+
+  <script>
+    const questions = [
+      {
+        texte: "Tu reçois un SMS : « Votre colis est bloqué, payez 2 € ici ». Que fais-tu ?",
+        choix: ["Je clique vite pour régler", "J'ignore le lien et je vérifie sur le site officiel du transporteur", "Je réponds au SMS"],
+        bonne: 1,
+        explication: "Un faux SMS de colis est une arnaque classique. Passe toujours par le site officiel."
+      },
+      {
+        texte: "Quel mot de passe est le plus solide ?",
+        choix: ["azerty123", "Aziz2005", "cheval-bleu-lampe-nuage"],
+        bonne: 2,
+        explication: "Une phrase de passe longue est plus solide qu'un mot court avec quelques chiffres."
+      },
+      {
+        texte: "Que fait la double authentification (2FA) ?",
+        choix: ["Elle remplace le mot de passe", "Elle ajoute une deuxième preuve d'identité", "Elle efface tes données"],
+        bonne: 1,
+        explication: "Même si ton mot de passe est volé, il manque la deuxième preuve."
+      },
+      {
+        texte: "Un site te demande ton code reçu par SMS pour « vérifier ton compte ». Tu le donnes ?",
+        choix: ["Oui, c'est pour ma sécurité", "Jamais : ce code est personnel", "Seulement si le site a l'air sérieux"],
+        bonne: 1,
+        explication: "Un code reçu par SMS ne se partage jamais, même avec quelqu'un qui prétend être du support."
+      },
+      {
+        texte: "Pourquoi faire les mises à jour de ton téléphone ?",
+        choix: ["Pour corriger des failles de sécurité", "Uniquement pour changer l'apparence", "Ça ne sert à rien"],
+        bonne: 0,
+        explication: "Les mises à jour corrigent des failles que des pirates peuvent exploiter."
+      }
+    ];
+
+    let index = 0;
+    let score = 0;
+    let repondu = false;
+
+    const compteur = document.getElementById("compteur");
+    const questionEl = document.getElementById("question");
+    const reponsesEl = document.getElementById("reponses");
+    const explicationEl = document.getElementById("explication");
+    const suivantBtn = document.getElementById("suivant");
+
+    function afficher() {
+      const q = questions[index];
+      repondu = false;
+      compteur.textContent = "Question " + (index + 1) + " sur " + questions.length;
+      questionEl.textContent = q.texte;
+      explicationEl.textContent = "";
+      suivantBtn.style.display = "none";
+      reponsesEl.innerHTML = "";
+
+      q.choix.forEach(function (texte, i) {
+        const bouton = document.createElement("button");
+        bouton.className = "choix";
+        bouton.textContent = texte;
+        bouton.addEventListener("click", function () {
+          repondre(i, bouton);
+        });
+        reponsesEl.appendChild(bouton);
+      });
+    }
+
+    function repondre(i, bouton) {
+      if (repondu) return;
+      repondu = true;
+      const q = questions[index];
+      const boutons = reponsesEl.querySelectorAll(".choix");
+
+      if (i === q.bonne) {
+        score++;
+        bouton.classList.add("bon");
+      } else {
+        bouton.classList.add("faux");
+        boutons[q.bonne].classList.add("bon");
+      }
+
+      explicationEl.textContent = q.explication;
+      suivantBtn.style.display = "inline-block";
+      suivantBtn.textContent = index === questions.length - 1 ? "Voir mon score" : "Question suivante";
+    }
+
+    suivantBtn.addEventListener("click", function () {
+      index++;
+      if (index < questions.length) {
+        afficher();
+      } else {
+        terminer();
+      }
+    });
+
+    function terminer() {
+      compteur.textContent = "Quiz terminé";
+      questionEl.textContent = "Ton score : " + score + " / " + questions.length;
+      reponsesEl.innerHTML = "";
+      suivantBtn.style.display = "none";
+
+      if (score === questions.length) {
+        explicationEl.textContent = "Parfait ! Tu as d'excellents réflexes.";
+      } else if (score >= 3) {
+        explicationEl.textContent = "Bien joué ! Relis les pages pour combler les derniers points.";
+      } else {
+        explicationEl.textContent = "Pas de panique : relis les pages Phishing et Mots de passe, puis réessaie.";
+      }
+
+      const rejouer = document.createElement("a");
+      rejouer.className = "bouton";
+      rejouer.href = "quiz.html";
+      rejouer.textContent = "Recommencer";
+      reponsesEl.appendChild(rejouer);
+    }
+
+    afficher();
+  </script>
+</body>
+</html>

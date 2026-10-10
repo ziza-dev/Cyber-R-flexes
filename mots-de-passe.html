@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mots de passe solides | Cyber Réflexes</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav>
+    <a href="index.html">Accueil</a>
+    <a href="phishing.html">Phishing</a>
+    <a href="mots-de-passe.html">Mots de passe</a>
+    <a href="quiz.html">Quiz</a>
+  </nav>
+
+  <header class="hero">
+    <h1>Des mots de passe solides</h1>
+    <p>Ton mot de passe est la clé de ta vie numérique. Voici comment la rendre difficile à copier.</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Les règles essentielles</h2>
+      <div class="grille">
+        <div class="carte">
+          <h3>Longueur</h3>
+          <p>La longueur compte plus que la complexité. Vise 12 caractères minimum, ou une phrase de passe de plusieurs mots.</p>
+        </div>
+        <div class="carte">
+          <h3>Unicité</h3>
+          <p>Un mot de passe différent par compte important. Si un site est piraté, les autres restent protégés.</p>
+        </div>
+        <div class="carte">
+          <h3>Imprévisible</h3>
+          <p>Évite ton prénom, ta date de naissance, « 123456 » ou « motdepasse ».</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Teste la force d'un mot de passe</h2>
+      <p class="astuce">Ne tape pas ton vrai mot de passe ici. Ce testeur est un exercice : essaie des exemples. Il fonctionne dans ton navigateur et n'envoie rien.</p>
+      <input type="text" id="mdp" placeholder="Tape un mot de passe d'essai">
+      <div class="barre"><div id="niveau"></div></div>
+      <p id="verdict">Écris quelque chose pour commencer.</p>
+    </section>
+
+    <section>
+      <h2>Retenir sans se fatiguer</h2>
+      <ul>
+        <li>Utilise un <strong>gestionnaire de mots de passe</strong> : il crée et retient tout pour toi.</li>
+        <li>Pour le mot de passe principal, choisis une <strong>phrase de passe</strong> : quatre ou cinq mots sans lien entre eux.</li>
+        <li>Active la <strong>double authentification</strong> (2FA), d'abord sur ton e-mail.</li>
+        <li>Ne note jamais tes mots de passe dans un fichier non protégé ou sur un papier visible.</li>
+      </ul>
+    </section>
+
+    <p><a class="bouton" href="quiz.html">Teste-toi avec le quiz →</a></p>
+  </main>
+
+  <footer>
+    <p>Projet réalisé par ziza-dev, à but pédagogique.</p>
+  </footer>
+
+  <script>
+    const champ = document.getElementById("mdp");
+    const niveau = document.getElementById("niveau");
+    const verdict = document.getElementById("verdict");
+
+    champ.addEventListener("input", function () {
+      const mdp = champ.value;
+      let points = 0;
+
+      if (mdp.length >= 8) points++;
+      if (mdp.length >= 12) points++;
+      if (mdp.length >= 16) points++;
+      if (/[a-z]/.test(mdp) && /[A-Z]/.test(mdp)) points++;
+      if (/[0-9]/.test(mdp)) points++;
+      if (/[^a-zA-Z0-9]/.test(mdp)) points++;
+
+      const communs = ["123456", "password", "motdepasse", "azerty", "qwerty"];
+      const trouve = communs.some(function (c) {
+        return mdp.toLowerCase().includes(c);
+      });
+      if (trouve) points = Math.min(points, 1);
+
+      let texte, couleur;
+      if (mdp.length === 0) {
+        texte = "Écris quelque chose pour commencer.";
+        couleur = "#f87171";
+        points = 0;
+      } else if (points <= 2) {
+        texte = "Faible : facile à deviner.";
+        couleur = "#f87171";
+      } else if (points <= 4) {
+        texte = "Moyen : allonge-le pour le renforcer.";
+        couleur = "#fbbf24";
+      } else {
+        texte = "Solide : bonne longueur et bonne variété.";
+        couleur = "#34d399";
+      }
+
+      niveau.style.width = (points / 6) * 100 + "%";
+      niveau.style.backgroundColor = couleur;
+      verdict.textContent = texte;
+    });
+  </script>
+</body>
+</html>
