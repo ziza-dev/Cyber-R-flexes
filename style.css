@@ -157,3 +157,31 @@ input[type="text"] {
   font-size: 1em;
   background-color: var(--carte);
   color: var(--texte);}
+img { max-width: 100%; height: auto; }
+body { overflow-wrap: break-word; }
+code, .constat span { overflow-wrap: anywhere; }
+
+input[type="text"] { font-size: 16px; }
+
+.grille {
+  grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
+}
+
+@media (max-width: 600px) {
+  nav { gap: 6px; }
+  nav a { padding: 10px 12px; font-size: 0.95em; }
+
+  .hero { padding: 30px 14px; }
+  h1 { font-size: 1.5em; }
+  h2 { font-size: 1.3em; }
+
+  .ligne-saisie { flex-direction: column; }
+  .ligne-saisie input,
+  .ligne-saisie .bouton { width: 100%; }
+
+  .deux-boutons { flex-direction: column; }
+  .deux-boutons button { width: 100%; padding: 14px; }
+
+  .message { padding: 12px 14px; }
+  .etapes li { padding-left: 50px; }
+}
